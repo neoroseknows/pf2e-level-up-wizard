@@ -2,6 +2,12 @@
 <form>
   <h1>Congratulations! You leveled up!</h1>
   <h3>Here's your new shit:</h3>
+  {{#if boons}}
+    <h5>Features</h5>
+    {{#each boons}}
+      <ul>{{name}}</ul>
+    {{/each}}
+  {{/if}}
   {{#if classFeats}}
     <h5>Class Feats</h5>
     <label for='classFeats'>Select a Class Feat</label>
@@ -39,6 +45,16 @@
       <option value='' disabled selected>Make a Selection</option>
       {{#each generalFeats}}
         <option value={{name}}>{{name}} | {{system.level.value}}</option>
+      {{/each}}
+    </select>
+  {{/if}}
+  {{#if skills}}
+    <h5>Skill Increase</h5>
+    <label for='skills'>Select a Skill Increase</label>
+    <select name='skills' id='skills'>
+      <option value='' disabled selected>Make a Selection</option>
+      {{#each skills}}
+        <option value={{label}}>{{label}}</option>
       {{/each}}
     </select>
   {{/if}}

@@ -24,12 +24,13 @@ const filterAndSortFeats = async (searchQuery, toCharacterLevel) => {
 
   return filteredFeats.sort((a, b) =>
     a.system.level.value !== b.system.level.value
-      ? a.system.level.value - b.system.level.value
+      ? b.system.level.value - a.system.level.value
       : a.name.localeCompare(b.name)
   );
 };
 
 const getFeaturesForLevel = async (characterData, type) => {
+  console.log(characterData?.object?.class?.system);
   const levelsArray =
     characterData?.object?.class?.system?.[`${type}FeatLevels`]?.value;
   const toCharacterLevel =
@@ -61,6 +62,27 @@ const getFeaturesForLevel = async (characterData, type) => {
   return filterAndSortFeats(searchQuery, toCharacterLevel);
 };
 
+const getBoonsForLevel = (characterData) => {
+  const toCharacterLevel =
+    characterData?.object?.system?.details?.level?.value + 1;
+  const boonsArray = Object.values(characterData?.object?.class?.system?.items);
+
+  return boonsArray.filter((boon) => boon.level === toCharacterLevel);
+};
+
+const getSkillsForLevel = (characterData) => {
+  const toCharacterLevel =
+    characterData?.object?.system?.details?.level?.value + 1;
+  const levelsArray =
+    characterData?.object?.class?.system?.skillIncreaseLevels?.value;
+
+  if (!levelsArray.includes(toCharacterLevel)) return;
+
+  console.log(characterData?.object?.skills);
+
+  return Object.values(characterData?.object?.skills);
+};
+
 const getClassFeaturesForLevel = (characterData) =>
   getFeaturesForLevel(characterData, 'class');
 
@@ -72,6 +94,12 @@ const getSkillFeaturesForLevel = (characterData) =>
 
 const getGeneralFeaturesForLevel = (characterData) =>
   getFeaturesForLevel(characterData, 'general');
+
+/**
+ * TODO:
+ * Attribute Boosts
+ * Spellcasting
+ */
 
 export class PF2eLevelUpHelperConfig extends FormApplication {
   constructor(sheetData) {
@@ -94,7 +122,9 @@ export class PF2eLevelUpHelperConfig extends FormApplication {
       classFeats: await getClassFeaturesForLevel(this.sheetData),
       ancestryFeats: await getAncestryFeaturesForLevel(this.sheetData),
       skillFeats: await getSkillFeaturesForLevel(this.sheetData),
-      generalFeats: await getGeneralFeaturesForLevel(this.sheetData)
+      generalFeats: await getGeneralFeaturesForLevel(this.sheetData),
+      boons: getBoonsForLevel(this.sheetData),
+      skills: getSkillsForLevel(this.sheetData)
     };
   }
 }
