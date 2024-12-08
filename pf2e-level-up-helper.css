@@ -1,0 +1,15 @@
+.level-up-icon-button {
+  width: auto;
+  border: 0;
+  color: white;
+  background: transparent;
+  font-size: 24px;
+  line-height: normal;
+  align-self: center;
+  margin-right: 4px;
+}
+
+.level-up-icon-button:hover, .level-up-icon-button:focus {
+  box-shadow: none;
+  text-shadow: 0 0 5px red;
+}

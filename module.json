@@ -1,0 +1,26 @@
+{
+  "id": "pf2e-level-up-helper",
+  "name": "pf2e-level-up-helper",
+  "title": "PF2e Level Up Helper",
+  "description": "Assists with Level Ups!",
+  "authors": [
+    {
+      "name": "Zumanzo"
+    }
+  ],
+  "esmodules": [
+    "pf2e-level-up-helper.js"
+  ],
+  "styles": [
+    "pf2e-level-up-helper.css"
+  ],
+  "languages": [
+    {
+      "lang": "en",
+      "name": "English",
+      "path": "languages/en.json"
+    }
+  ],
+  "version": "1",
+  "minimumCoreVersion": "0.8.8"
+}
