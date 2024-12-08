@@ -197,4 +197,107 @@ export class PF2eLevelUpHelperConfig extends FormApplication {
       hasBoonsToDisplay
     };
   }
+
+  async _updateObject(event, formData) {
+    const actor = this.sheetData.object;
+
+    // Update the actor's level
+    const currentLevel = actor.system.details.level.value;
+    const newLevel = currentLevel + 1;
+
+    ui.notifications.info(`Updating level to ${newLevel}...`);
+    await actor.update({ 'system.details.level.value': newLevel });
+
+    // Wait for the actor to refresh
+    await Hooks.once('updateActor', () => {});
+
+    ui.notifications.info('Level updated. Starting feat updates...');
+
+    const featPromises = [];
+    const locations = {};
+
+    // Define feat groups
+    const featGroups = {
+      classFeats: `class-${newLevel}`,
+      ancestryFeats: `ancestry-${newLevel}`,
+      skillFeats: `skill-${newLevel}`,
+      generalFeats: `general-${newLevel}`
+    };
+
+    // Collect selected feats and their target locations
+    if (formData.classFeats) {
+      featPromises.push(fromUuid(formData.classFeats));
+      locations[formData.classFeats] = featGroups.classFeats;
+    }
+    if (formData.ancestryFeats) {
+      featPromises.push(fromUuid(formData.ancestryFeats));
+      locations[formData.ancestryFeats] = featGroups.ancestryFeats;
+    }
+    if (formData.skillFeats) {
+      featPromises.push(fromUuid(formData.skillFeats));
+      locations[formData.skillFeats] = featGroups.skillFeats;
+    }
+    if (formData.generalFeats) {
+      featPromises.push(fromUuid(formData.generalFeats));
+      locations[formData.generalFeats] = featGroups.generalFeats;
+    }
+
+    // Fetch all selected feats
+    const featsToAdd = await Promise.all(
+      featPromises.map((p) => p.catch(() => null))
+    );
+
+    // Filter out null values (invalid UUIDs)
+    const validFeats = featsToAdd.filter((feat) => feat !== null);
+
+    if (validFeats.length === 0) {
+      ui.notifications.warn('No valid feats were selected or found.');
+    } else {
+      // Add the feats to the actor with correct locations and level
+      const itemsToCreate = validFeats.map((feat) => {
+        const location = locations[feat.uuid];
+        return {
+          ...feat.toObject(),
+          system: {
+            ...feat.system,
+            location: location, // Assign the correct location
+            level: {
+              ...feat.system.level,
+              taken: newLevel // Set the level the feat is taken
+            }
+          }
+        };
+      });
+
+      await actor.createEmbeddedDocuments('Item', itemsToCreate);
+      ui.notifications.info(
+        'Selected feats have been added to your character.'
+      );
+    }
+
+    // Handle Skill Increase
+    if (formData.skills) {
+      const skill = formData.skills;
+      const normalizedSkill = normalizeString(skill);
+      const skillRankPath = `system.skills.${normalizedSkill}.rank`;
+      const updatedRank = actor.system.skills[normalizedSkill].rank + 1;
+      await actor.update({ [skillRankPath]: updatedRank });
+      ui.notifications.info(`${skill} skill rank has been increased.`);
+    }
+
+    // Notify user of manual updates
+    if (formData.abilityScoreIncreaseLevel) {
+      ui.notifications.info(
+        'Remember to manually update Ability Score Increases in the Character tab!'
+      );
+    }
+
+    if (formData.newSpellRankLevel) {
+      ui.notifications.info(
+        'Remember to manually update your Spellcasting tab for the new spell rank!'
+      );
+    }
+
+    ui.notifications.info('Feat updates complete!');
+  }
 }
