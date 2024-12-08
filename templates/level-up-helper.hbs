@@ -2,11 +2,45 @@
 <form>
   <h1>Congratulations! You leveled up!</h1>
   <h3>Here's your new shit:</h3>
-  {{#if boons}}
+  {{#if hasBoonsToDisplay}}
     <h5>Features</h5>
-    {{#each boons}}
-      <ul>{{name}}</ul>
-    {{/each}}
+    <ul>
+      {{#if boons.boonsForLevel.length}}
+        <li>
+          <strong>New Features:</strong>
+          <ul>
+            {{#each boons.boonsForLevel}}
+              <li>{{this.name}} (No action required)</li>
+            {{/each}}
+          </ul>
+        </li>
+      {{/if}}
+      {{#if boons.abilityScoreIncreaseLevel}}
+        <li>
+          <strong>Ability Score Increases:</strong>
+          Update this manually on the
+          <em>Character</em>
+          tab of your character sheet.
+        </li>
+      {{/if}}
+      {{#if boons.doesCharacterHaveSpellcasting}}
+        {{#if boons.newSpellRankLevel}}
+          <li>
+            <strong>New Spell Rank Available:</strong>
+            Update this manually on the
+            <em>Spellcasting</em>
+            tab of your character sheet.
+          </li>
+        {{else}}
+          <li>
+            <strong>New Spell Slots:</strong>
+            Update this manually on the
+            <em>Spellcasting</em>
+            tab of your character sheet.
+          </li>
+        {{/if}}
+      {{/if}}
+    </ul>
   {{/if}}
   {{#if classFeats}}
     <h5>Class Feats</h5>
