@@ -3,20 +3,20 @@
   <h1>Congratulations! You leveled up!</h1>
   <h3>Here's your new stuff:</h3>
 
-  {{#if hasBoonsToDisplay}}
+  {{#if hasFeaturesToDisplay}}
     <h5>Features</h5>
     <ul>
-      {{#if boons.boonsForLevel.length}}
+      {{#if features.featuresForLevel.length}}
         <li>
           <strong>New Features:</strong>
           <ul>
-            {{#each boons.boonsForLevel}}
+            {{#each features.featuresForLevel}}
               <li>{{this.name}} (No action required)</li>
             {{/each}}
           </ul>
         </li>
       {{/if}}
-      {{#if boons.abilityScoreIncreaseLevel}}
+      {{#if features.abilityScoreIncreaseLevel}}
         <li>
           <strong>Ability Score Increases:</strong>
           Update this manually on the
@@ -24,8 +24,8 @@
           tab of your character sheet.
         </li>
       {{/if}}
-      {{#if boons.doesCharacterHaveSpellcasting}}
-        {{#if boons.newSpellRankLevel}}
+      {{#if features.spellcasting}}
+        {{#if features.newSpellRankLevel}}
           <li>
             <strong>New Spell Rank Available:</strong>
             Update this manually on the

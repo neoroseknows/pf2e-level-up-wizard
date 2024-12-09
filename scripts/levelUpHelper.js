@@ -1,12 +1,10 @@
 let cachedFeats = null;
+
+// @Constants
 const abilityScoreIncreaseLevels = [5, 10, 15, 20];
 const newSpellRankLevels = [1, 3, 5, 7, 9, 11, 13, 15, 17, 19];
 
-/**
- *
- * @returns feats compendium
- */
-
+// @Utility
 const getCachedFeats = async () => {
   if (!cachedFeats) {
     const featsCompendium = game.packs.get('pf2e.feats-srd');
@@ -15,25 +13,12 @@ const getCachedFeats = async () => {
   return cachedFeats;
 };
 
-/**
- *
- * @param {string} str string to normalize
- * @returns string with spaces replaced with dashes and set to lowercase
- */
-
 const normalizeString = (str) => str.replace(/\s+/g, '-').toLowerCase();
-
-/**
- *
- * @param {string} searchQuery feat type to search for
- * @param {number} toCharacterLevel level that the character is leveling to
- * @returns feats filtered to the character's level and below, sorted by level (descending) then alphabetically
- */
 
 const filterAndSortFeats = async (searchQuery, toCharacterLevel) => {
   const feats = await getCachedFeats();
-
   const normalizedQuery = normalizeString(searchQuery);
+
   const filteredFeats = feats.filter((feat) => {
     const traits = feat.system.traits.value.map(normalizeString);
     return (
@@ -49,14 +34,8 @@ const filterAndSortFeats = async (searchQuery, toCharacterLevel) => {
   );
 };
 
-/**
- *
- * @param {CharacterSheetPF2e} characterData the data for the character sheet to get features for
- * @param {string} type feature type
- * @returns filtered/sorted feats based off of the feature type
- */
-
-const getFeaturesForLevel = async (characterData, type) => {
+// Retrieve Feats for specific Levels and Types
+const getFeatsForLevel = async (characterData, type) => {
   const levelsArray =
     characterData?.object?.class?.system?.[`${type}FeatLevels`]?.value;
   const toCharacterLevel =
@@ -64,44 +43,32 @@ const getFeaturesForLevel = async (characterData, type) => {
 
   if (!levelsArray.includes(toCharacterLevel)) return;
 
-  let searchQuery;
+  const queryMap = {
+    class: characterData?.object?.class?.name,
+    ancestry: characterData?.object?.ancestry?.name,
+    general: 'general',
+    skill: 'skill'
+  };
 
-  // Use a switch to handle various feat types
-  switch (type) {
-    case 'class':
-      searchQuery = characterData?.object?.class?.name;
-      break;
-    case 'ancestry':
-      searchQuery = characterData?.object?.ancestry?.name;
-      break;
-    case 'general':
-      searchQuery = 'general';
-      break;
-    case 'skill':
-      searchQuery = 'skill';
-      break;
-    default:
-      console.error(`Unknown feat type: ${type}`);
-      return;
+  const searchQuery = queryMap[type];
+  if (!searchQuery) {
+    console.error(`Unknown feat type: ${type}`);
+    return;
   }
 
   return filterAndSortFeats(searchQuery, toCharacterLevel);
 };
 
-/**
- *
- * @param {CharacterSheetPF2e} characterData data for the character sheet to get features for
- * @returns boons object for the level that the character is leveling to
- */
-
-const getBoonsForLevel = (characterData) => {
+// Retrieve Features for specific Levels for class
+const getFeaturesForLevel = (characterData) => {
   const toCharacterLevel =
     characterData?.object?.system?.details?.level?.value + 1;
-  const doesCharacterHaveSpellcasting =
-    characterData?.object?.class?.system?.spellcasting;
-  const boonsArray = Object.values(characterData?.object?.class?.system?.items);
+  const spellcasting = characterData?.object?.class?.system?.spellcasting;
+  const featuresArray = Object.values(
+    characterData?.object?.class?.system?.items
+  );
 
-  const boonsForLevel = boonsArray.filter(
+  const featuresForLevel = featuresArray.filter(
     (boon) => boon.level === toCharacterLevel
   );
 
@@ -109,51 +76,27 @@ const getBoonsForLevel = (characterData) => {
     abilityScoreIncreaseLevels.includes(toCharacterLevel);
 
   const newSpellRankLevel =
-    newSpellRankLevels.includes(toCharacterLevel) &&
-    doesCharacterHaveSpellcasting;
+    newSpellRankLevels.includes(toCharacterLevel) && spellcasting;
 
   return {
-    boonsForLevel,
+    featuresForLevel,
     abilityScoreIncreaseLevel,
     newSpellRankLevel,
-    doesCharacterHaveSpellcasting
+    spellcasting
   };
 };
 
-/**
- *
- * @param {CharacterSheetPF2e} characterData data for the character sheet to get features for
- * @returns array of skills for the user to select from
- */
-
+// Retrieve Skill options
 const getSkillsForLevel = (characterData) => {
   const toCharacterLevel =
     characterData?.object?.system?.details?.level?.value + 1;
   const levelsArray =
     characterData?.object?.class?.system?.skillIncreaseLevels?.value;
 
-  if (!levelsArray.includes(toCharacterLevel)) return;
-
-  return Object.values(characterData?.object?.skills);
+  return levelsArray.includes(toCharacterLevel)
+    ? Object.values(characterData?.object?.skills)
+    : [];
 };
-
-/**
- *
- * @param {CharacterSheetPF2e} characterData data for the character sheet to get features for
- * @returns feats for the upcoming level associated with the passed in search query
- */
-
-const getClassFeaturesForLevel = (characterData) =>
-  getFeaturesForLevel(characterData, 'class');
-
-const getAncestryFeaturesForLevel = (characterData) =>
-  getFeaturesForLevel(characterData, 'ancestry');
-
-const getSkillFeaturesForLevel = (characterData) =>
-  getFeaturesForLevel(characterData, 'skill');
-
-const getGeneralFeaturesForLevel = (characterData) =>
-  getFeaturesForLevel(characterData, 'general');
 
 export class PF2eLevelUpHelperConfig extends FormApplication {
   constructor(sheetData) {
@@ -172,19 +115,19 @@ export class PF2eLevelUpHelperConfig extends FormApplication {
   }
 
   async getData() {
-    const classFeats = await getClassFeaturesForLevel(this.sheetData);
-    const ancestryFeats = await getAncestryFeaturesForLevel(this.sheetData);
-    const skillFeats = await getSkillFeaturesForLevel(this.sheetData);
-    const generalFeats = await getGeneralFeaturesForLevel(this.sheetData);
-    const boons = getBoonsForLevel(this.sheetData);
+    const classFeats = await getFeatsForLevel(this.sheetData, 'class');
+    const ancestryFeats = await getFeatsForLevel(this.sheetData, 'ancestry');
+    const skillFeats = await getFeatsForLevel(this.sheetData, 'skill');
+    const generalFeats = await getFeatsForLevel(this.sheetData, 'general');
+    const features = getFeaturesForLevel(this.sheetData);
     const skills = getSkillsForLevel(this.sheetData);
 
-    // Check if at least one field in `boons` is truthy
-    const hasBoonsToDisplay = !!(
-      boons.boonsForLevel.length > 0 ||
-      boons.abilityScoreIncreaseLevel ||
-      boons.newSpellRankLevel ||
-      boons.doesCharacterHaveSpellcasting
+    // Check if at least one field in `features` is truthy
+    const hasFeaturesToDisplay = !!(
+      features.featuresForLevel.length > 0 ||
+      features.abilityScoreIncreaseLevel ||
+      features.newSpellRankLevel ||
+      features.spellcasting
     );
 
     return {
@@ -192,88 +135,58 @@ export class PF2eLevelUpHelperConfig extends FormApplication {
       ancestryFeats,
       skillFeats,
       generalFeats,
-      boons,
+      features,
       skills,
-      hasBoonsToDisplay
+      hasFeaturesToDisplay
     };
   }
 
   async _updateObject(event, formData) {
     const actor = this.sheetData.object;
-
-    // Update the actor's level
     const currentLevel = actor.system.details.level.value;
     const newLevel = currentLevel + 1;
 
-    ui.notifications.info(`Updating level to ${newLevel}...`);
+    // Update the actor's level
     await actor.update({ 'system.details.level.value': newLevel });
+
+    ui.notifications.info(`Updating level to ${newLevel}...`);
 
     // Wait for the actor to refresh
     await Hooks.once('updateActor', () => {});
 
     ui.notifications.info('Level updated. Starting feat updates...');
 
-    const featPromises = [];
-    const locations = {};
+    // Process feats
+    const featPromises = Object.entries({
+      classFeats: formData.classFeats,
+      ancestryFeats: formData.ancestryFeats,
+      skillFeats: formData.skillFeats,
+      generalFeats: formData.generalFeats
+    })
+      .filter(([, uuid]) => uuid)
+      .map(([type, uuid]) => fromUuid(uuid).then((feat) => ({ feat, type })));
 
-    // Define feat groups
-    const featGroups = {
-      classFeats: `class-${newLevel}`,
-      ancestryFeats: `ancestry-${newLevel}`,
-      skillFeats: `skill-${newLevel}`,
-      generalFeats: `general-${newLevel}`
-    };
-
-    // Collect selected feats and their target locations
-    if (formData.classFeats) {
-      featPromises.push(fromUuid(formData.classFeats));
-      locations[formData.classFeats] = featGroups.classFeats;
-    }
-    if (formData.ancestryFeats) {
-      featPromises.push(fromUuid(formData.ancestryFeats));
-      locations[formData.ancestryFeats] = featGroups.ancestryFeats;
-    }
-    if (formData.skillFeats) {
-      featPromises.push(fromUuid(formData.skillFeats));
-      locations[formData.skillFeats] = featGroups.skillFeats;
-    }
-    if (formData.generalFeats) {
-      featPromises.push(fromUuid(formData.generalFeats));
-      locations[formData.generalFeats] = featGroups.generalFeats;
-    }
-
-    // Fetch all selected feats
-    const featsToAdd = await Promise.all(
-      featPromises.map((p) => p.catch(() => null))
+    const featsToAdd = (await Promise.all(featPromises)).filter(
+      ({ feat }) => feat
     );
 
-    // Filter out null values (invalid UUIDs)
-    const validFeats = featsToAdd.filter((feat) => feat !== null);
+    const featGroupMap = {
+      classFeats: 'class',
+      ancestryFeats: 'ancestry',
+      skillFeats: 'skill',
+      generalFeats: 'general'
+    };
 
-    if (validFeats.length === 0) {
-      ui.notifications.warn('No valid feats were selected or found.');
-    } else {
-      // Add the feats to the actor with correct locations and level
-      const itemsToCreate = validFeats.map((feat) => {
-        const location = locations[feat.uuid];
-        return {
-          ...feat.toObject(),
-          system: {
-            ...feat.system,
-            location: location, // Assign the correct location
-            level: {
-              ...feat.system.level,
-              taken: newLevel // Set the level the feat is taken
-            }
-          }
-        };
-      });
+    const itemsToCreate = featsToAdd.map(({ feat, type }) => ({
+      ...feat.toObject(),
+      system: {
+        ...feat.system,
+        location: `${featGroupMap[type]}-${newLevel}`,
+        level: { ...feat.system.level, taken: newLevel }
+      }
+    }));
 
-      await actor.createEmbeddedDocuments('Item', itemsToCreate);
-      ui.notifications.info(
-        'Selected feats have been added to your character.'
-      );
-    }
+    await actor.createEmbeddedDocuments('Item', itemsToCreate);
 
     // Handle Skill Increase
     if (formData.skills) {
