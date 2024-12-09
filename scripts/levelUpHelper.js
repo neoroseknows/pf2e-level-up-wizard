@@ -31,6 +31,7 @@ export class PF2eLevelUpHelperConfig extends FormApplication {
     const generalFeats = await getFeatsForLevel(this.sheetData, 'general');
     const features = getFeaturesForLevel(this.sheetData);
     const skills = getSkillsForLevel(this.sheetData);
+    const actorName = this.sheetData.actor.name;
 
     // Check if at least one field in `features` is truthy
     const hasFeaturesToDisplay = !!(
@@ -47,7 +48,8 @@ export class PF2eLevelUpHelperConfig extends FormApplication {
       generalFeats,
       features,
       skills,
-      hasFeaturesToDisplay
+      hasFeaturesToDisplay,
+      actorName
     };
   }
 

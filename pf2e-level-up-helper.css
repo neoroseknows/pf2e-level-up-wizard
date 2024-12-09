@@ -43,5 +43,22 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
+  margin: 4px 0 1rem 0;
+
+  > label {
+    flex: 2;
+  }
+}
+
+.form-select-feat {
+  flex: 2 !important;
+}
+
+.form-select-skill {
+  flex: 1 !important;
+}
+
+.fancy-font {
+  font-family: var(--serif);
+  font-weight: 600;
 }

@@ -1,19 +1,102 @@
 {{log 'level-up-helper' this}}
 <form>
-  <h1>Congratulations! You leveled up!</h1>
+  <h1 class='fancy-font'>{{actorName}} leveled up!</h1>
+  <p>Here's an overview of your new features. Please make selections where
+    prompted!</p>
+
+  {{#if classFeats}}
+    <h3><strong>
+        Class Feats
+      </strong></h3>
+    <div class='selection-row'>
+      <label for='classFeats'>
+        New Class Feat Available:
+      </label>
+      <select name='classFeats' id='classFeats' class='form-select-feat'>
+        <option value='' disabled selected>Make a Selection</option>
+        {{#each classFeats}}
+          <option value={{uuid}}>{{name}} | {{system.level.value}}</option>
+        {{/each}}
+      </select>
+    </div>
+  {{/if}}
+
+  {{#if ancestryFeats}}
+    <h3><strong>
+        Ancestry Feats
+      </strong></h3>
+    <div class='selection-row'>
+      <label for='ancestryFeats'>New Ancestry Feat Available:
+      </label>
+      <select name='ancestryFeats' id='ancestryFeats' class='form-select-feat'>
+        <option value='' disabled selected>Make a Selection</option>
+        {{#each ancestryFeats}}
+          <option value={{uuid}}>{{name}} | {{system.level.value}}</option>
+        {{/each}}
+      </select>
+    </div>
+  {{/if}}
+
+  {{#if skillFeats}}
+    <h3><strong>
+        Skill Feats
+      </strong></h3>
+    <div class='selection-row'>
+      <label for='skillFeats'>
+        New Skill Feat Available:
+      </label>
+      <select name='skillFeats' id='skillFeats' class='form-select-feat'>
+        <option value='' disabled selected>Make a Selection</option>
+        {{#each skillFeats}}
+          <option value={{uuid}}>{{name}} | {{system.level.value}}</option>
+        {{/each}}
+      </select>
+    </div>
+  {{/if}}
+
+  {{#if generalFeats}}
+    <h3><strong>
+        General Feats
+      </strong></h3>
+    <div class='selection-row'>
+      <label for='generalFeats'>
+        New General Feat Available:
+      </label>
+      <select name='generalFeats' id='generalFeats' class='form-select-feat'>
+        <option value='' disabled selected>Make a Selection</option>
+        {{#each generalFeats}}
+          <option value={{uuid}}>{{name}} | {{system.level.value}}</option>
+        {{/each}}
+      </select>
+    </div>
+  {{/if}}
+  {{#if skills}}
+    <h3><strong>
+        Skill Increases
+      </strong></h3>
+    <div class='selection-row'>
+      <label for='skills'>
+        Skill Increase Available:
+      </label>
+      <select name='skills' id='skills' class='form-select-skill'>
+        <option value='' disabled selected>Make a Selection</option>
+        {{#each skills}}
+          <option value={{label}} class={{class}}>{{label}}</option>
+        {{/each}}
+      </select>
+    </div>
+  {{/if}}
 
   {{#if hasFeaturesToDisplay}}
-    <h3>New Features</h3>
+    <h3><strong>
+        New Class Features
+      </strong>
+    </h3>
     <ul>
       {{#if features.featuresForLevel.length}}
-        <li>
-          <strong>New Features:</strong>
-          <ul>
-            {{#each features.featuresForLevel}}
-              <li>{{this.name}} (No action required)</li>
-            {{/each}}
-          </ul>
-        </li>
+        {{#each features.featuresForLevel}}
+          <li><strong>{{this.name}} (No action required)</strong></li>
+        {{/each}}
       {{/if}}
       {{#if features.abilityScoreIncreaseLevel}}
         <li>
@@ -26,7 +109,7 @@
       {{#if features.spellcasting}}
         {{#if features.newSpellRankLevel}}
           <li>
-            <strong>New Spell Rank Available:</strong>
+            <strong>New Spell Rank & Slots Available:</strong>
             Update this manually on the
             <em>Spellcasting</em>
             tab of your character sheet.
@@ -41,71 +124,6 @@
         {{/if}}
       {{/if}}
     </ul>
-  {{/if}}
-
-  {{#if classFeats}}
-    <h3>Class Feats</h3>
-    <div class='selection-row'>
-      <label for='classFeats'>Select a Class Feat</label>
-      <select name='classFeats' id='classFeats'>
-        <option value='' disabled selected>Make a Selection</option>
-        {{#each classFeats}}
-          <option value={{uuid}}>{{name}} | {{system.level.value}}</option>
-        {{/each}}
-      </select>
-    </div>
-  {{/if}}
-
-  {{#if ancestryFeats}}
-    <h3>Ancestry Feats</h3>
-    <div class='selection-row'>
-      <label for='ancestryFeats'>Select an Ancestry Feat</label>
-      <select name='ancestryFeats' id='ancestryFeats'>
-        <option value='' disabled selected>Make a Selection</option>
-        {{#each ancestryFeats}}
-          <option value={{uuid}}>{{name}} | {{system.level.value}}</option>
-        {{/each}}
-      </select>
-    </div>
-  {{/if}}
-
-  {{#if skillFeats}}
-    <h3>Skill Feats</h3>
-    <div class='selection-row'>
-      <label for='skillFeats'>Select a Skill Feat</label>
-      <select name='skillFeats' id='skillFeats'>
-        <option value='' disabled selected>Make a Selection</option>
-        {{#each skillFeats}}
-          <option value={{uuid}}>{{name}} | {{system.level.value}}</option>
-        {{/each}}
-      </select>
-    </div>
-  {{/if}}
-
-  {{#if generalFeats}}
-    <h3>General Feats</h3>
-    <div class='selection-row'>
-      <label for='generalFeats'>Select a General Feat</label>
-      <select name='generalFeats' id='generalFeats'>
-        <option value='' disabled selected>Make a Selection</option>
-        {{#each generalFeats}}
-          <option value={{uuid}}>{{name}} | {{system.level.value}}</option>
-        {{/each}}
-      </select>
-    </div>
-  {{/if}}
-
-  {{#if skills}}
-    <h3>Skill Increase</h3>
-    <div class='selection-row'>
-      <label for='skills'>Select a Skill Increase</label>
-      <select name='skills' id='skills'>
-        <option value='' disabled selected>Make a Selection</option>
-        {{#each skills}}
-          <option value={{label}} class={{class}}>{{label}}</option>
-        {{/each}}
-      </select>
-    </div>
   {{/if}}
 
   <!-- Submit Button -->
