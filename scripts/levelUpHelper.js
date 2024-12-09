@@ -1,102 +1,12 @@
-let cachedFeats = null;
-
-// @Constants
-const abilityScoreIncreaseLevels = [5, 10, 15, 20];
-const newSpellRankLevels = [1, 3, 5, 7, 9, 11, 13, 15, 17, 19];
-
-// @Utility
-const getCachedFeats = async () => {
-  if (!cachedFeats) {
-    const featsCompendium = game.packs.get('pf2e.feats-srd');
-    cachedFeats = await featsCompendium.getDocuments();
-  }
-  return cachedFeats;
-};
-
-const normalizeString = (str) => str.replace(/\s+/g, '-').toLowerCase();
-
-const filterAndSortFeats = async (searchQuery, toCharacterLevel) => {
-  const feats = await getCachedFeats();
-  const normalizedQuery = normalizeString(searchQuery);
-
-  const filteredFeats = feats.filter((feat) => {
-    const traits = feat.system.traits.value.map(normalizeString);
-    return (
-      traits.includes(normalizedQuery) &&
-      feat.system.level.value <= toCharacterLevel
-    );
-  });
-
-  return filteredFeats.sort((a, b) =>
-    a.system.level.value !== b.system.level.value
-      ? b.system.level.value - a.system.level.value
-      : a.name.localeCompare(b.name)
-  );
-};
-
-// Retrieve Feats for specific Levels and Types
-const getFeatsForLevel = async (characterData, type) => {
-  const levelsArray =
-    characterData?.object?.class?.system?.[`${type}FeatLevels`]?.value;
-  const toCharacterLevel =
-    characterData?.object?.system?.details?.level?.value + 1;
-
-  if (!levelsArray.includes(toCharacterLevel)) return;
-
-  const queryMap = {
-    class: characterData?.object?.class?.name,
-    ancestry: characterData?.object?.ancestry?.name,
-    general: 'general',
-    skill: 'skill'
-  };
-
-  const searchQuery = queryMap[type];
-  if (!searchQuery) {
-    console.error(`Unknown feat type: ${type}`);
-    return;
-  }
-
-  return filterAndSortFeats(searchQuery, toCharacterLevel);
-};
-
-// Retrieve Features for specific Levels for class
-const getFeaturesForLevel = (characterData) => {
-  const toCharacterLevel =
-    characterData?.object?.system?.details?.level?.value + 1;
-  const spellcasting = characterData?.object?.class?.system?.spellcasting;
-  const featuresArray = Object.values(
-    characterData?.object?.class?.system?.items
-  );
-
-  const featuresForLevel = featuresArray.filter(
-    (boon) => boon.level === toCharacterLevel
-  );
-
-  const abilityScoreIncreaseLevel =
-    abilityScoreIncreaseLevels.includes(toCharacterLevel);
-
-  const newSpellRankLevel =
-    newSpellRankLevels.includes(toCharacterLevel) && spellcasting;
-
-  return {
-    featuresForLevel,
-    abilityScoreIncreaseLevel,
-    newSpellRankLevel,
-    spellcasting
-  };
-};
-
-// Retrieve Skill options
-const getSkillsForLevel = (characterData) => {
-  const toCharacterLevel =
-    characterData?.object?.system?.details?.level?.value + 1;
-  const levelsArray =
-    characterData?.object?.class?.system?.skillIncreaseLevels?.value;
-
-  return levelsArray.includes(toCharacterLevel)
-    ? Object.values(characterData?.object?.skills)
-    : [];
-};
+import {
+  normalizeString,
+  getFeatsForLevel,
+  getFeaturesForLevel,
+  getSkillsForLevel,
+  createGlobalLevelMessage,
+  createPersonalLevelMessage,
+  skillProficiencyRanks
+} from './helpers.js';
 
 export class PF2eLevelUpHelperConfig extends FormApplication {
   constructor(sheetData) {
@@ -164,7 +74,7 @@ export class PF2eLevelUpHelperConfig extends FormApplication {
     ui.notifications.info('Level updated. Starting feat updates...');
 
     // Process feats
-    // Transform data to feat types and UUIDs
+    // Map form data to feat types and UUIDs
     const featEntries = Object.entries({
       classFeats: formData.classFeats,
       ancestryFeats: formData.ancestryFeats,
@@ -213,7 +123,9 @@ export class PF2eLevelUpHelperConfig extends FormApplication {
       const updatedRank = actor.system.skills[normalizedSkill].rank + 1;
       await actor.update({ [skillRankPath]: updatedRank });
 
-      skillIncreaseMessage = `${skill} skill rank increased.`;
+      const rankName =
+        skillProficiencyRanks[updatedRank] || `Rank ${updatedRank}`;
+      skillIncreaseMessage = `${skill} skill rank increased to ${rankName}.`;
       ui.notifications.info(skillIncreaseMessage);
     }
 
@@ -224,49 +136,14 @@ export class PF2eLevelUpHelperConfig extends FormApplication {
     const playerId = game.user.id;
     const actorName = actor.name;
 
-    // Global message: Announce level-up and selected feats
-    const globalMessage = `
-            <h2>${actorName} has leveled up to Level ${newLevel}!</h2>
-            <p><strong>Selected Feats:</strong> ${
-              selectedFeats || 'No feats selected.'
-            }</p>
-            ${
-              skillIncreaseMessage
-                ? `<p><strong>Skill Increase:</strong> ${skillIncreaseMessage}</p>`
-                : ''
-            }
-        `;
-    ChatMessage.create({
-      content: globalMessage,
-      speaker: { alias: actorName }
-    });
+    createGlobalLevelMessage(
+      actorName,
+      newLevel,
+      selectedFeats,
+      skillIncreaseMessage
+    );
 
-    // Whisper to player: Remind of manual updates
-    const manualUpdates = [];
-    if (formData.abilityScoreIncreaseLevel) {
-      manualUpdates.push('Ability Score Increases (Character tab)');
-    }
-    if (formData.spellcasting) {
-      manualUpdates.push(
-        formData.newSpellRankLevel
-          ? 'New Spell Rank & Slots (Spellcasting tab)'
-          : 'New Spell Slots (Spellcasting tab)'
-      );
-    }
-
-    if (manualUpdates.length > 0) {
-      const whisperMessage = `
-                <h2>Manual Updates Needed</h2>
-                <ul>${manualUpdates
-                  .map((update) => `<li>${update}</li>`)
-                  .join('')}</ul>
-            `;
-      ChatMessage.create({
-        content: whisperMessage,
-        whisper: [playerId],
-        speaker: { alias: actorName }
-      });
-    }
+    createPersonalLevelMessage(formData, playerId, actorName);
 
     ui.notifications.info('Feat updates complete!');
   }
