@@ -6,6 +6,9 @@ export const renderLevelUpButton = (sheet, html) => {
 
   const title = game.i18n.localize('PF2E_LEVEL_UP_HELPER.button-tooltip');
 
+  html.find('.level-up-icon-button').remove();
+  html.find('.level-up-helper').remove();
+
   if (game.settings.get(module_name, 'buttonPlacement') === 'CHAR_HEADER') {
     const button = $(
       `<button type='button' class='level-up-icon-button flex0' title="${title}">

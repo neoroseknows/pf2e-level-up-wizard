@@ -1,4 +1,5 @@
 import { module_name } from '../pf2e-level-up-helper.js';
+import { renderLevelUpButton } from './actor.js';
 
 export const registerSettings = () => {
   game.settings.register(module_name, 'buttonPlacement', {
@@ -11,13 +12,19 @@ export const registerSettings = () => {
     choices: {
       CHAR_HEADER: 'Next To Level',
       WINDOW_HEADER: 'Toolbar'
+    },
+    onChange: () => {
+      Object.values(ui.windows).forEach((app) => {
+        if (
+          app.options.classes.includes('character') &&
+          app.actor?.type === 'character'
+        ) {
+          app.render(false);
+
+          const html = $(app.element);
+          renderLevelUpButton(app, html);
+        }
+      });
     }
-    // onChange: () => {
-    //   Object.values(ui.windows).forEach((app) => {
-    //     if (app instanceof CharacterSheetPF2e) {
-    //       app.render(false);
-    //     }
-    //   });
-    // }
   });
 };
