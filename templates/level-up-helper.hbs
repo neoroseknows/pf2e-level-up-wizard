@@ -1,10 +1,9 @@
 {{log 'level-up-helper' this}}
 <form>
   <h1>Congratulations! You leveled up!</h1>
-  <h3>Here's your new stuff:</h3>
 
   {{#if hasFeaturesToDisplay}}
-    <h5>Features</h5>
+    <h3>New Features</h3>
     <ul>
       {{#if features.featuresForLevel.length}}
         <li>
@@ -45,58 +44,68 @@
   {{/if}}
 
   {{#if classFeats}}
-    <h5>Class Feats</h5>
-    <label for='classFeats'>Select a Class Feat</label>
-    <select name='classFeats' id='classFeats'>
-      <option value='' disabled selected>Make a Selection</option>
-      {{#each classFeats}}
-        <option value={{uuid}}>{{name}} | {{system.level.value}}</option>
-      {{/each}}
-    </select>
+    <h3>Class Feats</h3>
+    <div class='selection-row'>
+      <label for='classFeats'>Select a Class Feat</label>
+      <select name='classFeats' id='classFeats'>
+        <option value='' disabled selected>Make a Selection</option>
+        {{#each classFeats}}
+          <option value={{uuid}}>{{name}} | {{system.level.value}}</option>
+        {{/each}}
+      </select>
+    </div>
   {{/if}}
 
   {{#if ancestryFeats}}
-    <h5>Ancestry Feats</h5>
-    <label for='ancestryFeats'>Select an Ancestry Feat</label>
-    <select name='ancestryFeats' id='ancestryFeats'>
-      <option value='' disabled selected>Make a Selection</option>
-      {{#each ancestryFeats}}
-        <option value={{uuid}}>{{name}} | {{system.level.value}}</option>
-      {{/each}}
-    </select>
+    <h3>Ancestry Feats</h3>
+    <div class='selection-row'>
+      <label for='ancestryFeats'>Select an Ancestry Feat</label>
+      <select name='ancestryFeats' id='ancestryFeats'>
+        <option value='' disabled selected>Make a Selection</option>
+        {{#each ancestryFeats}}
+          <option value={{uuid}}>{{name}} | {{system.level.value}}</option>
+        {{/each}}
+      </select>
+    </div>
   {{/if}}
 
   {{#if skillFeats}}
-    <h5>Skill Feats</h5>
-    <label for='skillFeats'>Select a Skill Feat</label>
-    <select name='skillFeats' id='skillFeats'>
-      <option value='' disabled selected>Make a Selection</option>
-      {{#each skillFeats}}
-        <option value={{uuid}}>{{name}} | {{system.level.value}}</option>
-      {{/each}}
-    </select>
+    <h3>Skill Feats</h3>
+    <div class='selection-row'>
+      <label for='skillFeats'>Select a Skill Feat</label>
+      <select name='skillFeats' id='skillFeats'>
+        <option value='' disabled selected>Make a Selection</option>
+        {{#each skillFeats}}
+          <option value={{uuid}}>{{name}} | {{system.level.value}}</option>
+        {{/each}}
+      </select>
+    </div>
   {{/if}}
 
   {{#if generalFeats}}
-    <h5>General Feats</h5>
-    <label for='generalFeats'>Select a General Feat</label>
-    <select name='generalFeats' id='generalFeats'>
-      <option value='' disabled selected>Make a Selection</option>
-      {{#each generalFeats}}
-        <option value={{uuid}}>{{name}} | {{system.level.value}}</option>
-      {{/each}}
-    </select>
+    <h3>General Feats</h3>
+    <div class='selection-row'>
+      <label for='generalFeats'>Select a General Feat</label>
+      <select name='generalFeats' id='generalFeats'>
+        <option value='' disabled selected>Make a Selection</option>
+        {{#each generalFeats}}
+          <option value={{uuid}}>{{name}} | {{system.level.value}}</option>
+        {{/each}}
+      </select>
+    </div>
   {{/if}}
 
   {{#if skills}}
-    <h5>Skill Increase</h5>
-    <label for='skills'>Select a Skill Increase</label>
-    <select name='skills' id='skills'>
-      <option value='' disabled selected>Make a Selection</option>
-      {{#each skills}}
-        <option value={{label}}>{{label}}</option>
-      {{/each}}
-    </select>
+    <h3>Skill Increase</h3>
+    <div class='selection-row'>
+      <label for='skills'>Select a Skill Increase</label>
+      <select name='skills' id='skills'>
+        <option value='' disabled selected>Make a Selection</option>
+        {{#each skills}}
+          <option value={{label}} class={{class}}>{{label}}</option>
+        {{/each}}
+      </select>
+    </div>
   {{/if}}
 
   <!-- Submit Button -->

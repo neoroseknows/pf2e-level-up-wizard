@@ -17,7 +17,7 @@ export class PF2eLevelUpHelperConfig extends FormApplication {
   static get defaultOptions() {
     return foundry.utils.mergeObject(super.defaultOptions, {
       height: 'auto',
-      width: 'auto',
+      width: 500,
       id: 'level-up-helper',
       template: './modules/pf2e-level-up-helper/templates/level-up-helper.hbs',
       title: 'Level Up Helper'

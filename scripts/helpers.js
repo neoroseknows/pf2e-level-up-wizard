@@ -12,6 +12,29 @@ export const skillProficiencyRanks = {
   4: 'Legendary'
 };
 
+export const getSkillRankClass = (rank) => {
+  switch (rank) {
+    case 0:
+      return 'skill-option-untrained';
+    case 1:
+      return 'skill-option-trained';
+    case 2:
+      return 'skill-option-expert';
+    case 3:
+      return 'skill-option-master';
+    case 4:
+      return 'skill-option-legendary';
+    default:
+      return '';
+  }
+};
+
+export const getMaxSkillProficiency = (level) => {
+  if (level >= 15) return 4; // Legendary
+  if (level >= 7) return 3; // Master
+  return 2; // Expert
+};
+
 // @Utility
 const getCachedFeats = async () => {
   if (!cachedFeats) {
@@ -101,9 +124,13 @@ export const getSkillsForLevel = (characterData) => {
   const levelsArray =
     characterData?.object?.class?.system?.skillIncreaseLevels?.value;
 
-  return levelsArray.includes(toCharacterLevel)
-    ? Object.values(characterData?.object?.skills)
-    : [];
+  if (!levelsArray.includes(toCharacterLevel)) return [];
+
+  const maxProficiency = getMaxSkillProficiency(toCharacterLevel);
+
+  return Object.values(characterData?.object?.skills)
+    .filter((skill) => skill.rank < maxProficiency)
+    .map((skill) => ({ ...skill, class: getSkillRankClass(skill.rank) }));
 };
 
 export const createGlobalLevelMessage = (

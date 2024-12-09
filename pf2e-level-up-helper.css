@@ -13,3 +13,35 @@
   box-shadow: none;
   text-shadow: 0 0 3px var(--color-shadow-primary);
 }
+
+.skill-option-untrained {
+  color: var(--text-light);
+  background-color: var(--color-proficiency-untrained);
+}
+
+.skill-option-trained {
+  color: var(--text-light);
+  background-color: var(--color-proficiency-trained);
+}
+
+.skill-option-expert {
+  color: var(--text-light);
+  background-color: var(--color-proficiency-expert);
+}
+
+.skill-option-master {
+  color: var(--text-light);
+  background-color: var(--color-proficiency-master);
+}
+
+.skill-option-legendary {
+  color: var(--text-light);
+  background-color: var(--color-proficiency-legendary);
+}
+
+.selection-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
