@@ -146,6 +146,13 @@ export class PF2eLevelUpHelperConfig extends FormApplication {
     const currentLevel = actor.system.details.level.value;
     const newLevel = currentLevel + 1;
 
+    // Merge `features` from `getData` with `formData`
+    const data = await this.getData();
+    formData.abilityScoreIncreaseLevel =
+      data.features.abilityScoreIncreaseLevel;
+    formData.spellcasting = data.features.spellcasting;
+    formData.newSpellRankLevel = data.features.newSpellRankLevel;
+
     // Update the actor's level
     await actor.update({ 'system.details.level.value': newLevel });
 
@@ -157,15 +164,24 @@ export class PF2eLevelUpHelperConfig extends FormApplication {
     ui.notifications.info('Level updated. Starting feat updates...');
 
     // Process feats
-    const featPromises = Object.entries({
+    // Transform data to feat types and UUIDs
+    const featEntries = Object.entries({
       classFeats: formData.classFeats,
       ancestryFeats: formData.ancestryFeats,
       skillFeats: formData.skillFeats,
       generalFeats: formData.generalFeats
-    })
-      .filter(([, uuid]) => uuid)
-      .map(([type, uuid]) => fromUuid(uuid).then((feat) => ({ feat, type })));
+    });
 
+    // Filter out invalid entries (no UUID provided)
+    const validFeatEntries = featEntries.filter(([, uuid]) => uuid);
+
+    // Fetch feats by UUID
+    const featPromises = validFeatEntries.map(async ([type, uuid]) => {
+      const feat = await fromUuid(uuid).catch(() => null);
+      return { feat, type };
+    });
+
+    // Resolve all promises and filter valid feats
     const featsToAdd = (await Promise.all(featPromises)).filter(
       ({ feat }) => feat
     );
@@ -189,26 +205,67 @@ export class PF2eLevelUpHelperConfig extends FormApplication {
     await actor.createEmbeddedDocuments('Item', itemsToCreate);
 
     // Handle Skill Increase
+    let skillIncreaseMessage = '';
     if (formData.skills) {
       const skill = formData.skills;
       const normalizedSkill = normalizeString(skill);
       const skillRankPath = `system.skills.${normalizedSkill}.rank`;
       const updatedRank = actor.system.skills[normalizedSkill].rank + 1;
       await actor.update({ [skillRankPath]: updatedRank });
-      ui.notifications.info(`${skill} skill rank has been increased.`);
+
+      skillIncreaseMessage = `${skill} skill rank increased.`;
+      ui.notifications.info(skillIncreaseMessage);
     }
 
-    // Notify user of manual updates
+    // Prepare messages
+    const selectedFeats = featsToAdd
+      .map(({ feat }) => `@UUID[${feat.uuid}]`)
+      .join(', ');
+    const playerId = game.user.id;
+    const actorName = actor.name;
+
+    // Global message: Announce level-up and selected feats
+    const globalMessage = `
+            <h2>${actorName} has leveled up to Level ${newLevel}!</h2>
+            <p><strong>Selected Feats:</strong> ${
+              selectedFeats || 'No feats selected.'
+            }</p>
+            ${
+              skillIncreaseMessage
+                ? `<p><strong>Skill Increase:</strong> ${skillIncreaseMessage}</p>`
+                : ''
+            }
+        `;
+    ChatMessage.create({
+      content: globalMessage,
+      speaker: { alias: actorName }
+    });
+
+    // Whisper to player: Remind of manual updates
+    const manualUpdates = [];
     if (formData.abilityScoreIncreaseLevel) {
-      ui.notifications.info(
-        'Remember to manually update Ability Score Increases in the Character tab!'
+      manualUpdates.push('Ability Score Increases (Character tab)');
+    }
+    if (formData.spellcasting) {
+      manualUpdates.push(
+        formData.newSpellRankLevel
+          ? 'New Spell Rank & Slots (Spellcasting tab)'
+          : 'New Spell Slots (Spellcasting tab)'
       );
     }
 
-    if (formData.newSpellRankLevel) {
-      ui.notifications.info(
-        'Remember to manually update your Spellcasting tab for the new spell rank!'
-      );
+    if (manualUpdates.length > 0) {
+      const whisperMessage = `
+                <h2>Manual Updates Needed</h2>
+                <ul>${manualUpdates
+                  .map((update) => `<li>${update}</li>`)
+                  .join('')}</ul>
+            `;
+      ChatMessage.create({
+        content: whisperMessage,
+        whisper: [playerId],
+        speaker: { alias: actorName }
+      });
     }
 
     ui.notifications.info('Feat updates complete!');
