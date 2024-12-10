@@ -64,6 +64,7 @@ export class PF2eLevelUpWizardConfig extends FormApplication {
     const features = await getFeaturesForLevel(this.sheetData);
     const skills = getSkillsForLevel(this.sheetData);
     const actorName = this.sheetData.actor.name;
+    const newLevel = this.sheetData.actor.system.details.level.value + 1;
 
     // Check if at least one field in `features` is truthy
     const hasFeaturesToDisplay = !!(
@@ -81,7 +82,8 @@ export class PF2eLevelUpWizardConfig extends FormApplication {
       features,
       skills,
       hasFeaturesToDisplay,
-      actorName
+      actorName,
+      newLevel
     };
   }
 
@@ -91,8 +93,7 @@ export class PF2eLevelUpWizardConfig extends FormApplication {
     if (!confirmed) return;
 
     const actor = this.sheetData.object;
-    const currentLevel = actor.system.details.level.value;
-    const newLevel = currentLevel + 1;
+    const newLevel = actor.system.details.level.value + 1;
     const playerId = game.user.id;
     const actorName = actor.name;
 
