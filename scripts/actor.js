@@ -23,7 +23,7 @@ export const renderLevelUpButton = (sheet, html) => {
 
   if (game.settings.get(module_name, 'buttonPlacement') === 'WINDOW_HEADER') {
     const button = $(
-      `<a class="level-up-wizard" title="Level Up Wizard"><i class="fas fa-level-up-alt"></i>${title}</a>`
+      `<a class="level-up-wizard" title="Level Up Wizard"><i class="fas fa-hat-wizard"></i>${title}</a>`
     );
     button.on('click', () => new PF2eLevelUpWizardConfig(sheet).render(true));
 

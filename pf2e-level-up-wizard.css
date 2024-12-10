@@ -62,3 +62,7 @@
   font-family: var(--serif);
   font-weight: 600;
 }
+
+.flavor-text {
+  padding-bottom: 8px;
+}
