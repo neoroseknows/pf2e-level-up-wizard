@@ -1,11 +1,19 @@
 {
   "id": "pf2e-level-up-wizard",
-  "name": "pf2e-level-up-wizard",
   "title": "PF2e Level Up Wizard",
-  "description": "Assists with Level Ups!",
+  "description": "A Wizard to assist with your level ups in PF2e!",
+  "version": "#{VERSION}#",
+  "library": "false",
+  "manifestPlusVersion": "1.2.0",
+  "compatibility": {
+    "minimum": 10,
+    "verified": 12,
+    "maximum": 12
+  },
   "authors": [
     {
-      "name": "Zumanzo"
+      "name": "Zumanzo",
+      "discord": "Zumanzo#8754"
     }
   ],
   "esmodules": ["pf2e-level-up-wizard.js"],
@@ -17,6 +25,9 @@
       "path": "languages/en.json"
     }
   ],
-  "version": "1",
-  "minimumCoreVersion": "0.8.8"
+  "url": "#{URL}#",
+  "manifest": "#{MANIFEST}#",
+  "download": "#{DOWNLOAD}#",
+  "license": "LICENSE",
+  "readme": "README.md"
 }

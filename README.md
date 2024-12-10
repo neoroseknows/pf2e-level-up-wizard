@@ -26,7 +26,8 @@ Follow the steps on screen, hit submit (and confirm!), and watch as the wizard h
 
 - Updating Feat dropdown to allow for opening the corresponding compendium page, as well as sending the Feat info in chat
 - Marking Feats that have prerequisites
+- Proper Localization :)
 
 ## Bug Reporting / Feature Requests
 
-Feel free to reach out to me on Discord at zumanzo#8754, and/or open an [issue on Github](https://github.com/BenABaron/pf2e-level-up-wizard/issues).
+Feel free to reach out to me on Discord at Zumanzo#8754, and/or open an [issue on Github](https://github.com/BenABaron/pf2e-level-up-wizard/issues).
