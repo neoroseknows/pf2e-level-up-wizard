@@ -35,6 +35,11 @@ export const getMaxSkillProficiency = (level) => {
   return 2; // Expert
 };
 
+const stripParagraphTags = (html) => {
+  if (!html) return '';
+  return html.replace(/^<p>/, '').replace(/<\/p>$/, ''); // Removes only outer <p> tags
+};
+
 // @Utility
 const getCachedFeats = async () => {
   if (!cachedFeats) {
@@ -91,7 +96,7 @@ export const getFeatsForLevel = async (characterData, type) => {
 };
 
 // Retrieve Features for specific Levels for class
-export const getFeaturesForLevel = (characterData) => {
+export const getFeaturesForLevel = async (characterData) => {
   const toCharacterLevel =
     characterData?.object?.system?.details?.level?.value + 1;
   const spellcasting = characterData?.object?.class?.system?.spellcasting;
@@ -103,6 +108,20 @@ export const getFeaturesForLevel = (characterData) => {
     (boon) => boon.level === toCharacterLevel
   );
 
+  const featuresWithDetails = await Promise.all(
+    featuresForLevel.map(async (feature) => {
+      const item = await fromUuid(feature.uuid).catch(() => null);
+      if (!item) return null;
+
+      return {
+        name: feature.name,
+        description: stripParagraphTags(item.system.description.value),
+        img: feature.img || item.img,
+        uuid: feature.uuid
+      };
+    })
+  );
+
   const abilityScoreIncreaseLevel =
     abilityScoreIncreaseLevels.includes(toCharacterLevel);
 
@@ -110,7 +129,7 @@ export const getFeaturesForLevel = (characterData) => {
     newSpellRankLevels.includes(toCharacterLevel) && spellcasting;
 
   return {
-    featuresForLevel,
+    featuresForLevel: featuresWithDetails.filter((feature) => feature),
     abilityScoreIncreaseLevel,
     newSpellRankLevel,
     spellcasting

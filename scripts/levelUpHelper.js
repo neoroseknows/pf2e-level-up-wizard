@@ -17,7 +17,8 @@ export class PF2eLevelUpHelperConfig extends FormApplication {
   static get defaultOptions() {
     return foundry.utils.mergeObject(super.defaultOptions, {
       height: 'auto',
-      width: 500,
+      width: 525,
+      resizable: true,
       id: 'level-up-helper',
       template: './modules/pf2e-level-up-helper/templates/level-up-helper.hbs',
       title: 'Level Up Helper'
@@ -29,7 +30,7 @@ export class PF2eLevelUpHelperConfig extends FormApplication {
     const ancestryFeats = await getFeatsForLevel(this.sheetData, 'ancestry');
     const skillFeats = await getFeatsForLevel(this.sheetData, 'skill');
     const generalFeats = await getFeatsForLevel(this.sheetData, 'general');
-    const features = getFeaturesForLevel(this.sheetData);
+    const features = await getFeaturesForLevel(this.sheetData);
     const skills = getSkillsForLevel(this.sheetData);
     const actorName = this.sheetData.actor.name;
 
