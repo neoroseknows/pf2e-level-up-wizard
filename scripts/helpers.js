@@ -12,6 +12,17 @@ export const skillProficiencyRanks = {
   4: 'Legendary'
 };
 
+// @Utility
+const getCachedFeats = async () => {
+  if (!cachedFeats) {
+    const featsCompendium = game.packs.get('pf2e.feats-srd');
+    cachedFeats = await featsCompendium.getDocuments();
+  }
+  return cachedFeats;
+};
+
+export const normalizeString = (str) => str.replace(/\s+/g, '-').toLowerCase();
+
 export const getSkillRankClass = (rank) => {
   switch (rank) {
     case 0:
@@ -37,7 +48,23 @@ export const getMaxSkillProficiency = (level) => {
 
 const stripParagraphTags = (html) => {
   if (!html) return '';
-  return html.replace(/^<p>/, '').replace(/<\/p>$/, ''); // Removes only outer <p> tags
+  return html.replace(/^<p>/, '').replace(/<\/p>$/, '');
+};
+
+export const getClassSpecificDescription = (description, characterClass) => {
+  if (!description || !characterClass) return description;
+
+  const regex = new RegExp(`<p><strong>(.*?)</strong>(.*?)</p>`, 'gi');
+
+  let match;
+  while ((match = regex.exec(description))) {
+    const classes = match[1].split(',').map((c) => c.trim().toLowerCase());
+    if (classes.includes(characterClass.toLowerCase())) {
+      return `<p>${match[2].trim()}</p>`;
+    }
+  }
+
+  return description;
 };
 
 export const confirmChanges = async () => {
@@ -46,17 +73,6 @@ export const confirmChanges = async () => {
     content: '<p>Are you sure you want to apply these level-up changes?</p>'
   });
 };
-
-// @Utility
-const getCachedFeats = async () => {
-  if (!cachedFeats) {
-    const featsCompendium = game.packs.get('pf2e.feats-srd');
-    cachedFeats = await featsCompendium.getDocuments();
-  }
-  return cachedFeats;
-};
-
-export const normalizeString = (str) => str.replace(/\s+/g, '-').toLowerCase();
 
 const filterAndSortFeats = async (searchQuery, toCharacterLevel) => {
   const feats = await getCachedFeats();
@@ -77,7 +93,6 @@ const filterAndSortFeats = async (searchQuery, toCharacterLevel) => {
   );
 };
 
-// Retrieve Feats for specific Levels and Types
 export const getFeatsForLevel = async (characterData, type) => {
   const levelsArray =
     characterData?.object?.class?.system?.[`${type}FeatLevels`]?.value;
@@ -102,10 +117,10 @@ export const getFeatsForLevel = async (characterData, type) => {
   return filterAndSortFeats(searchQuery, toCharacterLevel);
 };
 
-// Retrieve Features for specific Levels for class
 export const getFeaturesForLevel = async (characterData) => {
   const toCharacterLevel =
     characterData?.object?.system?.details?.level?.value + 1;
+  const characterClass = characterData?.object?.class?.name;
   const spellcasting = characterData?.object?.class?.system?.spellcasting;
   const featuresArray = Object.values(
     characterData?.object?.class?.system?.items
@@ -120,9 +135,14 @@ export const getFeaturesForLevel = async (characterData) => {
       const item = await fromUuid(feature.uuid).catch(() => null);
       if (!item) return null;
 
+      const filteredDescription = getClassSpecificDescription(
+        item.system.description.value,
+        characterClass
+      );
+
       return {
         name: feature.name,
-        description: stripParagraphTags(item.system.description.value),
+        description: stripParagraphTags(filteredDescription),
         img: feature.img || item.img,
         uuid: feature.uuid
       };
@@ -143,7 +163,6 @@ export const getFeaturesForLevel = async (characterData) => {
   };
 };
 
-// Retrieve Skill options
 export const getSkillsForLevel = (characterData) => {
   const toCharacterLevel =
     characterData?.object?.system?.details?.level?.value + 1;

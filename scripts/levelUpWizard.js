@@ -9,7 +9,7 @@ import {
   confirmChanges
 } from './helpers.js';
 
-export class PF2eLevelUpHelperConfig extends FormApplication {
+export class PF2eLevelUpWizardConfig extends FormApplication {
   constructor(sheetData) {
     super();
     this.sheetData = sheetData;
@@ -20,16 +20,17 @@ export class PF2eLevelUpHelperConfig extends FormApplication {
       height: 'auto',
       width: 525,
       resizable: true,
-      id: 'level-up-helper',
-      template: './modules/pf2e-level-up-helper/templates/level-up-helper.hbs',
-      title: 'Level Up Helper'
+      id: 'level-up-wizard',
+      template: './modules/pf2e-level-up-wizard/templates/level-up-wizard.hbs',
+      title: 'Level Up Wizard',
+      closeOnSubmit: false
     });
   }
 
   render(force = false, options = {}) {
     super.render(force, options);
 
-    Hooks.once('renderPF2eLevelUpHelperConfig', () => {
+    Hooks.once('renderPF2eLevelUpWizardConfig', () => {
       const form = this.element.find('form');
       const submitButton = this.element.find('button[type="submit"]');
 
@@ -92,26 +93,22 @@ export class PF2eLevelUpHelperConfig extends FormApplication {
     const actor = this.sheetData.object;
     const currentLevel = actor.system.details.level.value;
     const newLevel = currentLevel + 1;
+    const playerId = game.user.id;
+    const actorName = actor.name;
 
-    // Merge `features` from `getData` with `formData`
+    ui.notifications.info(`Updating ${actorName} to level ${newLevel}...`);
+
     const data = await this.getData();
+
     formData.abilityScoreIncreaseLevel =
       data.features.abilityScoreIncreaseLevel;
     formData.spellcasting = data.features.spellcasting;
     formData.newSpellRankLevel = data.features.newSpellRankLevel;
 
-    // Update the actor's level
     await actor.update({ 'system.details.level.value': newLevel });
 
-    ui.notifications.info(`Updating level to ${newLevel}...`);
-
-    // Wait for the actor to refresh
     await Hooks.once('updateActor', () => {});
 
-    ui.notifications.info('Level updated. Starting feat updates...');
-
-    // Process feats
-    // Map form data to feat types and UUIDs
     const featEntries = Object.entries({
       classFeats: formData.classFeats,
       ancestryFeats: formData.ancestryFeats,
@@ -119,16 +116,13 @@ export class PF2eLevelUpHelperConfig extends FormApplication {
       generalFeats: formData.generalFeats
     });
 
-    // Filter out invalid entries (no UUID provided)
     const validFeatEntries = featEntries.filter(([, uuid]) => uuid);
 
-    // Fetch feats by UUID
     const featPromises = validFeatEntries.map(async ([type, uuid]) => {
       const feat = await fromUuid(uuid).catch(() => null);
       return { feat, type };
     });
 
-    // Resolve all promises and filter valid feats
     const featsToAdd = (await Promise.all(featPromises)).filter(
       ({ feat }) => feat
     );
@@ -151,7 +145,6 @@ export class PF2eLevelUpHelperConfig extends FormApplication {
 
     await actor.createEmbeddedDocuments('Item', itemsToCreate);
 
-    // Handle Skill Increase
     let skillIncreaseMessage = '';
     if (formData.skills) {
       const skill = formData.skills;
@@ -163,15 +156,11 @@ export class PF2eLevelUpHelperConfig extends FormApplication {
       const rankName =
         skillProficiencyRanks[updatedRank] || `Rank ${updatedRank}`;
       skillIncreaseMessage = `${skill} skill rank increased to ${rankName}.`;
-      ui.notifications.info(skillIncreaseMessage);
     }
 
-    // Prepare messages
     const selectedFeats = featsToAdd
       .map(({ feat }) => `@UUID[${feat.uuid}]`)
       .join(', ');
-    const playerId = game.user.id;
-    const actorName = actor.name;
 
     createGlobalLevelMessage(
       actorName,
@@ -182,6 +171,8 @@ export class PF2eLevelUpHelperConfig extends FormApplication {
 
     createPersonalLevelMessage(formData, playerId, actorName);
 
-    ui.notifications.info('Feat updates complete!');
+    ui.notifications.info(`${actorName} Level up complete!`);
+
+    this.close();
   }
 }

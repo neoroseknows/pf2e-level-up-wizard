@@ -1,19 +1,15 @@
 {
-  "id": "pf2e-level-up-helper",
-  "name": "pf2e-level-up-helper",
-  "title": "PF2e Level Up Helper",
+  "id": "pf2e-level-up-wizard",
+  "name": "pf2e-level-up-wizard",
+  "title": "PF2e Level Up Wizard",
   "description": "Assists with Level Ups!",
   "authors": [
     {
       "name": "Zumanzo"
     }
   ],
-  "esmodules": [
-    "pf2e-level-up-helper.js"
-  ],
-  "styles": [
-    "pf2e-level-up-helper.css"
-  ],
+  "esmodules": ["pf2e-level-up-wizard.js"],
+  "styles": ["pf2e-level-up-wizard.css"],
   "languages": [
     {
       "lang": "en",
