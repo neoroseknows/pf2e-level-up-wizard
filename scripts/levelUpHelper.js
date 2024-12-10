@@ -5,7 +5,8 @@ import {
   getSkillsForLevel,
   createGlobalLevelMessage,
   createPersonalLevelMessage,
-  skillProficiencyRanks
+  skillProficiencyRanks,
+  confirmChanges
 } from './helpers.js';
 
 export class PF2eLevelUpHelperConfig extends FormApplication {
@@ -23,6 +24,35 @@ export class PF2eLevelUpHelperConfig extends FormApplication {
       template: './modules/pf2e-level-up-helper/templates/level-up-helper.hbs',
       title: 'Level Up Helper'
     });
+  }
+
+  render(force = false, options = {}) {
+    super.render(force, options);
+
+    Hooks.once('renderPF2eLevelUpHelperConfig', () => {
+      const form = this.element.find('form');
+      const submitButton = this.element.find('button[type="submit"]');
+
+      const validateForm = () => {
+        const requiredFields = form.find('[data-required="true"]');
+
+        const allValid = Array.from(requiredFields).every(
+          (field) => field.value.trim() !== ''
+        );
+
+        submitButton.prop('disabled', !allValid);
+      };
+
+      validateForm();
+
+      form.on('change', '[data-required="true"]', validateForm);
+    });
+  }
+
+  close(options) {
+    const form = this.element.find('form');
+    form.off('change', '[data-required="true"]');
+    return super.close(options);
   }
 
   async getData() {
@@ -55,6 +85,10 @@ export class PF2eLevelUpHelperConfig extends FormApplication {
   }
 
   async _updateObject(event, formData) {
+    const confirmed = await confirmChanges();
+
+    if (!confirmed) return;
+
     const actor = this.sheetData.object;
     const currentLevel = actor.system.details.level.value;
     const newLevel = currentLevel + 1;

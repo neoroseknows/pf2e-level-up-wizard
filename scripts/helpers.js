@@ -40,6 +40,13 @@ const stripParagraphTags = (html) => {
   return html.replace(/^<p>/, '').replace(/<\/p>$/, ''); // Removes only outer <p> tags
 };
 
+export const confirmChanges = async () => {
+  return Dialog.confirm({
+    title: 'Confirm Changes',
+    content: '<p>Are you sure you want to apply these level-up changes?</p>'
+  });
+};
+
 // @Utility
 const getCachedFeats = async () => {
   if (!cachedFeats) {
